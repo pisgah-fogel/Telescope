@@ -25,7 +25,6 @@ class Animation(object):
         App.ActiveDocument.recompute()
         self.timer = QtCore.QTimer()
         QtCore.QObject.connect(self.timer, QtCore.SIGNAL("timeout()"), self.update)
-        self.an = 0.1
         self.logangle = []
         for i in range(100):
             self.logangle.append(0)
@@ -33,18 +32,32 @@ class Animation(object):
         plt.xlim([0, 100])
         self.line, = plt.plot(self.logangle)
         plt.show()
+        self.horizontal = 0 # horizontal angle
+        self.vertical = 0 # vertical angle
+        self.up = True
 
     def start(self):
         self.timer.start(500)
 
     def update(self):
-        self.an = self.an + 0.05 if self.an < (math.pi/2) else 0.0
-        angle = math.degrees(self.an)
-        App.ActiveDocument.Spreadsheet.set('B12:B12', str(angle)) # set telscope angle
+        self.horizontal += 5
+        
+        if self.up:
+            self.vertical += 10
+            if self.vertical >= 90:
+                self.up = False
+        else:
+            self.vertical -= 10
+            if self.vertical <= 0:
+                self.up = True
+
+        App.ActiveDocument.Spreadsheet.set('B12:B12', str(self.vertical)) # set telscope angle
+        App.ActiveDocument.Spreadsheet.set('B16:B16', str(self.horizontal)) # set telscope angle
         App.ActiveDocument.recompute()
-        App.Console.PrintMessage('angle: '+str(angle)+'\n')
+        App.Console.PrintMessage('vertical: '+str(self.vertical)+'\n')
+        App.Console.PrintMessage('horizontal: '+str(self.horizontal)+'\n')
         self.logangle.pop(0)
-        self.logangle.append(float(angle))
+        self.logangle.append(float(self.vertical))
         self.line.set_ydata(self.logangle)
         plt.draw()
 
